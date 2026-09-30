@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+*.xcodeproj/
+xcuserdata/
+DerivedData/
+
+# build_app.sh の生成物（build/Pomodoro.app）
+build/
+
+# 一時的なアイコン生成物（Tools/MakeAppIcon.swift の中間ファイル）
+*.iconset/
+
+# エディタ（個人設定）
+.vscode/
+.idea/
+*.swp
+*~
+
+# Claude Code（個人設定・作業ファイル）
+.claude/settings.local.json
+.claude/.cc-writes/
