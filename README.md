@@ -69,12 +69,16 @@ swiftc Tools/MakeAppIcon.swift Sources/Pomodoro/TomatoIcon.swift -o "$TMPDIR/mak
 
 ### リリースする（メンテナ向け）
 
-`v` で始まるタグを push すると、GitHub Actions（`.github/workflows/release.yml`）が arm64 + x86_64 のユニバーサルビルドを行い、`Pomodoro-<バージョン>.zip` を添付したリリースを作成します。
+`main` 向けの PR にリリース用のラベルを付けてマージすると、GitHub Actions（`.github/workflows/release.yml`）が次のバージョンを決め、arm64 + x86_64 のユニバーサルビルドを行い、`Pomodoro-<バージョン>.zip` を添付したリリースとタグを作ります。タグを手で打つ必要はありません。
 
-```bash
-git tag v1.1.0
-git push origin v1.1.0
-```
+| ラベル | 例（前回 v1.2.3） | 使いどころ |
+| --- | --- | --- |
+| `release:major` | v2.0.0 | 互換性のない変更 |
+| `release:minor` | v1.3.0 | 機能追加 |
+| `release:patch` | v1.2.4 | 不具合修正 |
+| （なし） | リリースしない | ドキュメントや CI だけの変更 |
+
+複数のラベルが付いていたら大きい方を採用します。
 
 ローカルで同じ配布用ビルドを試すには `UNIVERSAL=1 VERSION=1.1.0 ./build_app.sh` を実行します。
 

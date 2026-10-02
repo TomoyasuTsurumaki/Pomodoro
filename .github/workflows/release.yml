@@ -1,22 +1,55 @@
-# v* タグの push でユニバーサルビルドした Pomodoro.app を zip にして GitHub Releases に添付する。
-# 使い方: git tag v1.1.0 && git push origin v1.1.0
+# main への PR マージ時、PR のラベルから次のバージョンを決めて、
+# ユニバーサルビルドした Pomodoro.app の zip を添付したリリース（とタグ）を作る。
+#   release:major → v2.0.0 / release:minor → v1.1.0 / release:patch → v1.0.1
+# ラベルがない PR ではリリースしない。複数付いていたら大きい方を採用する。
 name: Release
 
 on:
-  push:
-    tags: ['v*']
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 permissions:
   contents: write
 
+# マージが続いたときに同じバージョンを二重に採番しないよう直列化する
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   release:
+    if: >-
+      github.event.pull_request.merged == true && (
+        contains(github.event.pull_request.labels.*.name, 'release:major') ||
+        contains(github.event.pull_request.labels.*.name, 'release:minor') ||
+        contains(github.event.pull_request.labels.*.name, 'release:patch')
+      )
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0   # 既存タグから次のバージョンを計算するため
 
       - name: バージョンを決定
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+        env:
+          MAJOR: ${{ contains(github.event.pull_request.labels.*.name, 'release:major') }}
+          MINOR: ${{ contains(github.event.pull_request.labels.*.name, 'release:minor') }}
+        run: |
+          # v1.2.3 形式のタグだけを見る（v0.0.1-test のようなタグは無視）
+          LATEST=$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+          IFS=. read -r MAJ MIN PAT <<< "${LATEST:-v0.0.0}"
+          MAJ=${MAJ#v}
+          if [[ "$MAJOR" == "true" ]]; then
+            MAJ=$((MAJ + 1)); MIN=0; PAT=0
+          elif [[ "$MINOR" == "true" ]]; then
+            MIN=$((MIN + 1)); PAT=0
+          else
+            PAT=$((PAT + 1))
+          fi
+          echo "前回: ${LATEST:-なし} → 今回: v${MAJ}.${MIN}.${PAT}"
+          echo "VERSION=${MAJ}.${MIN}.${PAT}" >> "$GITHUB_ENV"
 
       - name: ビルド（arm64 + x86_64）
         run: UNIVERSAL=1 ./build_app.sh
@@ -28,10 +61,13 @@ jobs:
       - name: zip に固める
         run: ditto -c -k --sequesterRsrc --keepParent build/Pomodoro.app "Pomodoro-${VERSION}.zip"
 
+      # --target を付けると、タグが無ければマージコミットにタグを作ってくれる
       - name: リリースを作成
         env:
           GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "Pomodoro-${VERSION}.zip" \
-            --title "$GITHUB_REF_NAME" \
+          gh release create "v${VERSION}" "Pomodoro-${VERSION}.zip" \
+            --target "$TARGET" \
+            --title "v${VERSION}" \
             --generate-notes

@@ -57,4 +57,4 @@ codesign --verify --deep --strict build/Pomodoro.app && echo OK
 - ビルド結果（アーキテクチャ、署名）
 - コミットのハッシュとメッセージ
 - push 先のブランチ
-- タグを push すればリリースが作られること（`git tag vX.Y.Z && git push origin vX.Y.Z`）。タグの作成と push は、ユーザーに頼まれたときだけ行う。
+- リリースするには、`main` 向けの PR に `release:major` / `release:minor` / `release:patch` のいずれかのラベルを付けてマージすればよいこと。タグを手で打つ必要はない。
