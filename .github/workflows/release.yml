@@ -1,0 +1,37 @@
+# v* タグの push でユニバーサルビルドした Pomodoro.app を zip にして GitHub Releases に添付する。
+# 使い方: git tag v1.1.0 && git push origin v1.1.0
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: バージョンを決定
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: ビルド（arm64 + x86_64）
+        run: UNIVERSAL=1 ./build_app.sh
+
+      - name: アーキテクチャを確認
+        run: lipo -archs build/Pomodoro.app/Contents/MacOS/Pomodoro
+
+      # zip コマンドではなく ditto を使う（署名と拡張属性を壊さないため）
+      - name: zip に固める
+        run: ditto -c -k --sequesterRsrc --keepParent build/Pomodoro.app "Pomodoro-${VERSION}.zip"
+
+      - name: リリースを作成
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "Pomodoro-${VERSION}.zip" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

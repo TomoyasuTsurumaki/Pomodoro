@@ -17,9 +17,26 @@ Swift / SwiftUI + AppKit で書いたメニューバー常駐のポモドーロ�
 
 ## 動作環境
 
-macOS 13 (Ventura) 以降 / Xcode 15 以降（または Swift 5.9 以降のコマンドラインツール）
+macOS 13 (Ventura) 以降（Apple Silicon / Intel 両対応）。ソースからビルドする場合は Xcode 15 以降（または Swift 5.9 以降のコマンドラインツール）も必要です。
 
-## ビルドと起動
+## インストール
+
+1. [Releases](https://github.com/TomoyasuTsurumaki/Pomodoro/releases/latest) から `Pomodoro-x.y.z.zip` をダウンロード
+2. zip を展開し、`Pomodoro.app` を `/Applications` に移動
+3. `Pomodoro.app` を起動（初回は通知の許可を尋ねられます）
+
+Apple の公証を受けていない（アドホック署名の）ため、初回起動時に「開発元を検証できません」などと表示されてブロックされます。次のどちらかで許可してください。
+
+- **システム設定 › プライバシーとセキュリティ** を開き、下の方に出る「このまま開く」を押す（macOS 15 以降は Finder の右クリック →「開く」では回避できません）
+- ターミナルで隔離属性を外す
+
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Pomodoro.app
+  ```
+
+アップデートするときは、新しい `Pomodoro.app` で上書きして同じ手順を行ってください。
+
+## ソースからビルドする
 
 ```bash
 cd Pomodoro
@@ -49,6 +66,17 @@ swiftc Tools/MakeAppIcon.swift Sources/Pomodoro/TomatoIcon.swift -o "$TMPDIR/mak
 ### ログイン時に自動起動させる
 
 システム設定 → 一般 → ログイン項目 で `Pomodoro.app` を追加してください。
+
+### リリースする（メンテナ向け）
+
+`v` で始まるタグを push すると、GitHub Actions（`.github/workflows/release.yml`）が arm64 + x86_64 のユニバーサルビルドを行い、`Pomodoro-<バージョン>.zip` を添付したリリースを作成します。
+
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+ローカルで同じ配布用ビルドを試すには `UNIVERSAL=1 VERSION=1.1.0 ./build_app.sh` を実行します。
 
 ## 使い方
 
