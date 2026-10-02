@@ -15,7 +15,7 @@ open build/Pomodoro.app     # 起動
 UNIVERSAL=1 VERSION=1.2.0 ./build_app.sh   # 配布用（arm64 + x86_64、バージョン指定）
 ```
 
-リリースは `v*` タグを push すると `.github/workflows/release.yml` が上記の配布用ビルドを行い、`ditto` で zip にして GitHub Releases に添付する（バージョンはタグ名から `v` を除いたもの）。
+リリースは `main` への PR マージで自動化している。`.github/workflows/release.yml` が PR のラベル（`release:major` / `release:minor` / `release:patch`、なければリリースしない）と既存の `vX.Y.Z` タグから次のバージョンを決め、上記の配布用ビルドを `ditto` で zip にして、マージコミットにタグを付けたリリースを作る。タグを手で push する運用はしない。
 
 テストターゲットは存在しない。Lint 設定（SwiftLint 等）もない。
 
