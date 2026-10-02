@@ -1,20 +1,29 @@
 #!/bin/bash
 # swift build で作ったバイナリを .app バンドルに詰め直す。
-# 使い方: ./build_app.sh   →  build/ポモドーロタイマー.app ができる
+# 使い方: ./build_app.sh   →  build/Pomodoro.app ができる
+# 環境変数:
+#   VERSION=1.2.0  バンドルのバージョン（既定 1.0。リリース CI はタグから渡す）
+#   UNIVERSAL=1    arm64 + x86_64 のユニバーサルバイナリを作る（配布用）
 set -euo pipefail
 
 TARGET_NAME="Pomodoro"
 APP_NAME="Pomodoro"
 DISPLAY_NAME="ポモドーロタイマー"
 BUNDLE_ID="com.roll1226.pomodoro"
-VERSION="1.0"
+VERSION="${VERSION:-1.0}"
 
 cd "$(dirname "$0")"
 
-echo "==> ビルド中..."
-swift build -c release
+SWIFT_ARGS=(-c release)
+if [[ "${UNIVERSAL:-0}" == "1" ]]; then
+    # 出力先が .build/apple/Products/Release に変わるので、--show-bin-path にも同じ引数を渡す
+    SWIFT_ARGS+=(--arch arm64 --arch x86_64)
+fi
 
-BIN_PATH="$(swift build -c release --show-bin-path)/${TARGET_NAME}"
+echo "==> ビルド中..."
+swift build "${SWIFT_ARGS[@]}"
+
+BIN_PATH="$(swift build "${SWIFT_ARGS[@]}" --show-bin-path)/${TARGET_NAME}"
 APP_DIR="build/${APP_NAME}.app"
 
 echo "==> .app バンドルを作成中..."

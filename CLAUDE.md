@@ -12,7 +12,10 @@ macOS メニューバー常駐のポモドーロタイマー。Swift Package Man
 swift build                 # デバッグビルド（構文確認はこれが最速）
 ./build_app.sh              # release ビルド → build/Pomodoro.app を生成しアドホック署名
 open build/Pomodoro.app     # 起動
+UNIVERSAL=1 VERSION=1.2.0 ./build_app.sh   # 配布用（arm64 + x86_64、バージョン指定）
 ```
+
+リリースは `v*` タグを push すると `.github/workflows/release.yml` が上記の配布用ビルドを行い、`ditto` で zip にして GitHub Releases に添付する（バージョンはタグ名から `v` を除いたもの）。
 
 テストターゲットは存在しない。Lint 設定（SwiftLint 等）もない。
 
